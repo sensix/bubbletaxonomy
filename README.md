@@ -1,4 +1,4 @@
-bubbletree
+Bubbletaxonomy
 ==========
 
 drupal module
