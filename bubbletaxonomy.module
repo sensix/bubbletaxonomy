@@ -101,7 +101,7 @@ function bubbletaxonomy_library() {
 	    ),
 	    'tween' => array(
 	    		'title' => 'Tween',
-	    		'website' => 'https://github.com/sole/tween.js/',
+	    		'website' => 'https://github.com/sole/tween.js.git',
 	    		'version' => 'r110',
 	    		'js' => array(
 	    				$lib_path . '/Tween.js' => array(),
@@ -176,9 +176,15 @@ function _get_color($tid){
 
 function _bubbletaxonomy_block_view(){
   //add libraries
-  bubbletaxonomy_add(false);
-  drupal_add_css(drupal_get_path('module','bubbletaxonomy') . '/css/bubbletree.css');
-  drupal_add_js(drupal_get_path('module','bubbletaxonomy') . '/lib/bubbletaxonomy.js');
+  //bubbletaxonomy_add(false);
+  $path = drupal_get_path('module','bubbletaxonomy');
+  drupal_add_css($path . '/css/bubbletree.css');
+  drupal_add_js($path . '/lib/raphael.js');
+  drupal_add_js($path . '/lib/jquery.history.js');
+  drupal_add_js($path . '/lib/jquery.tooltip.js');
+  drupal_add_js($path . '/lib/tween.js');
+  drupal_add_js($path . '/lib/vis4.js');
+  drupal_add_js($path . '/lib/bubbletaxonomy.js');
   //output
   $out = "<div class=\"bubbletree-wrapper\">
 		<div class=\"bubbletree\"></div>
@@ -194,18 +200,20 @@ function _bubbletaxonomy_block_view(){
  *    is TRUE for loading the minified version.
  */
 function bubbletaxonomy_add($minified = TRUE) {
-  /*
+  
   if ($minified) {
     drupal_add_library('bubbletaxonomy', 'bubbletree-min');
   }
   else {
     drupal_add_library('bubbletaxonomy', 'bubbletree');
   }
-  */
+  
   drupal_add_library('bubbletaxonomy', 'raphael');
   drupal_add_library('bubbletaxonomy', 'history');
   drupal_add_library('bubbletaxonomy', 'tooltip');
   drupal_add_library('bubbletaxonomy', 'tween');
   drupal_add_library('bubbletaxonomy', 'vis4');
+  
+  
 }
 
