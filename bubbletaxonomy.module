@@ -182,7 +182,7 @@ function _bubbletaxonomy_block_view(){
   drupal_add_js($path . '/lib/raphael.js');
   drupal_add_js($path . '/lib/jquery.history.js');
   drupal_add_js($path . '/lib/jquery.tooltip.js');
-  drupal_add_js($path . '/lib/tween.js');
+  drupal_add_js($path . '/lib/Tween.js');
   drupal_add_js($path . '/lib/vis4.js');
   drupal_add_js($path . '/lib/bubbletaxonomy.js');
   //output
