@@ -1,0 +1,4 @@
+name = BubbleTaxonomy
+description = View Taxonomy in bubble graph
+core = 7.x
+package = "Views"

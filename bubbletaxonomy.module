@@ -1,0 +1,211 @@
+<?php 
+
+define('BUBBLETAXONOMY_LIB_PATH', drupal_get_path('module', 'bubbletaxonomy') . '/lib/');
+
+/**
+ * Hook block_info
+ */
+function bubbletaxonomy_block_info(){
+  $blocks['bubbletaxonomy_graph'] = array(
+  		'info' => 'Bubble Graph',
+  		'cache' => DRUPAL_NO_CACHE,
+  );
+  return $blocks;
+}
+
+/**
+ *
+ * Hook block_view
+ */
+function bubbletaxonomy_block_view($delta = ''){
+	$block = array();
+	switch ($delta) {
+		case 'bubbletaxonomy_graph':
+			$block['subject'] = "";
+			$block['content'] =  _bubbletaxonomy_block_view();
+			break;
+
+	}
+	return $block;
+}
+/**
+ * 
+ * Hook menu
+ */
+function bubbletaxonomy_menu(){
+  $items['bubbletaxonomy/bubbles.json'] = array(
+      'page callback' => 'bubbletaxonomy_bubbles_json',
+      'access callback' => true,
+      'type' => MENU_CALLBACK,
+      
+  );
+  return $items;
+}
+
+/**
+ * Implements hook_library().
+ */
+function bubbletaxonomy_library() {
+	$lib_path = libraries_get_path('bubbletaxonomy');
+
+	return array(
+			'raphael' => array(
+					'title' => 'Raphaël (minified)',
+					'website' => 'http://raphaeljs.com/',
+					'version' => '2.0.0',
+					'js' => array(
+							$lib_path . '/raphael-min.js' => array(),
+					),
+			),
+	    'bubbletree' => array(
+	    		'title' => 'bubbletree',
+	    		'website' => 'https://github.com/okfn/bubbletree',
+	    		'version' => '2.0.1',
+	    		'js' => array(
+	    				$lib_path . '/bubbletree.js' => array(),
+	    		),
+	        'css' => array(
+	    				$lib_path . '/bubbletree.css' => array(
+	    				  'type' => 'file',
+                'media' => 'screen',),
+	    		),
+	    ),
+	    'bubbletree-min' => array(
+	    		'title' => 'bubbletree (minified)',
+	    		'website' => 'https://github.com/okfn/bubbletree',
+	    		'version' => '2.0.1',
+	    		'js' => array(
+	    				$lib_path . '/bubbletree.min.js' => array(),
+	    		),
+	        'css' => array(
+	        		$lib_path . '/bubbletree.css' => array(
+	        				'type' => 'file',
+	        				'media' => 'screen',),
+	        )
+	    ),
+	    'history' => array(
+	    		'title' => 'jquery.history',
+	    		'website' => 'http://jquery.com',
+	    		'version' => '',
+	    		'js' => array(
+	    				$lib_path . '/jquery.history.js' => array(),
+	    		),
+	    ),
+	    'tooltip' => array(
+	    		'title' => 'jquery.tooltip',
+	    		'website' => 'http://jquery.com',
+	    		'version' => '1,3',
+	    		'js' => array(
+	    				$lib_path . '/jquery.tooltip.min.js' => array(),
+	    		),
+	    ),
+	    'tween' => array(
+	    		'title' => 'Tween',
+	    		'website' => 'https://github.com/sole/tween.js/',
+	    		'version' => 'r110',
+	    		'js' => array(
+	    				$lib_path . '/Tween.js' => array(),
+	    		),
+	    ),
+	    'vis4' => array(
+	    		'title' => 'vis4',
+	    		'website' => 'https://bitbucket.org/gka/vis4.js',
+	    		'version' => '',
+	    		'js' => array(
+	    				$lib_path . '/vis4.js' => array(),
+	    		),
+	    ),
+	);
+}
+
+function bubbletaxonomy_bubbles_json(){
+  
+  $children = array(
+      array('label' => "Persone", 'amount' => 850, 'color' => "#880000"),
+      array('label' => "Progetti", 'amount' => 100, 'color' => "#008800"),
+      
+  );
+  
+  $bubbles = array('label' => "Philomed", 'amount' => 100, 'children' => $children);
+  
+  $ret = db_query('select * from taxonomy_term_data t join taxonomy_term_hierarchy h on t.tid=h.tid where h.parent=0 and t.vid=1')->fetchAssoc();
+  $rootNode = array('id' => $ret['tid'], 'label' => $ret['name'] . '<br />' . $ret['description'], 'amount' => 1000, 'initTooltip' => "initTooltip");
+  
+  //get children
+  $rootNode['children'] = _get_children($ret);
+  drupal_json_output($rootNode);
+}
+
+function _get_children($node, $level = 0){
+  $level++;
+  $node = (array)$node;
+  $ret = db_query('select * from taxonomy_term_data t join taxonomy_term_hierarchy h on t.tid=h.tid where h.parent = :parent', array(':parent' => $node['tid']));
+  $children = array();
+  $i = 0;
+  foreach($ret as $child){
+    $children[$i] = array(
+        'id' => $child->tid,
+        'label' => $child->name,
+        'amount' => ceil(rand(500,1000) / $level) ,
+    );
+    $color = _get_color($child->tid);
+    if($color !== false){
+    	$children[$i]['color'] = $color;
+    }
+    $childs = _get_children($child, $level);
+    if(count($childs) > 0){
+      $children[$i]['children'] = $childs;
+    }
+    $i++;
+  }
+  return $children;
+}
+
+function _get_color($tid){
+  $ret = db_select('field_data_field_color','c')
+    ->fields('c',array('field_color_value'))
+    ->condition('entity_id', $tid)
+    ->execute()
+    ->fetchAssoc();
+  if($ret){
+    return $ret['field_color_value'];
+  }else{
+    return false;
+  }
+}
+
+function _bubbletaxonomy_block_view(){
+  //add libraries
+  bubbletaxonomy_add(false);
+  drupal_add_css(drupal_get_path('module','bubbletaxonomy') . '/css/bubbletree.css');
+  drupal_add_js(drupal_get_path('module','bubbletaxonomy') . '/lib/bubbletaxonomy.js');
+  //output
+  $out = "<div class=\"bubbletree-wrapper\">
+		<div class=\"bubbletree\"></div>
+	</div>";
+  return $out;
+}
+
+/**
+ * Load bubbletree on a page.
+ *
+ * @param boolean $minified
+ *    Whether to load the minified or the uncompressed version. Default
+ *    is TRUE for loading the minified version.
+ */
+function bubbletaxonomy_add($minified = TRUE) {
+  /*
+  if ($minified) {
+    drupal_add_library('bubbletaxonomy', 'bubbletree-min');
+  }
+  else {
+    drupal_add_library('bubbletaxonomy', 'bubbletree');
+  }
+  */
+  drupal_add_library('bubbletaxonomy', 'raphael');
+  drupal_add_library('bubbletaxonomy', 'history');
+  drupal_add_library('bubbletaxonomy', 'tooltip');
+  drupal_add_library('bubbletaxonomy', 'tween');
+  drupal_add_library('bubbletaxonomy', 'vis4');
+}
+
