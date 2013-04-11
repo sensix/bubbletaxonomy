@@ -1,7 +1,11 @@
+#footer{
+	margin-top:500px;
+	
+}
 
 .bubbletree-wrapper { 
 	width: 100%; 
-	height: 100%; 
+	height: 500px; 
 	position: absolute; 
 }
 
